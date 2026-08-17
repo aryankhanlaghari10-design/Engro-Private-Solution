@@ -1,2 +1,1535 @@
-# Engro-Private-Solution
-Pakistan 🇵🇰 No 1 Earning Platform 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Engro Private Solution - Investment Game</title>
+  <!-- Firebase Compat SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-storage-compat.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    :root {
+      --primary: #4CAF50;
+      --light: #f0f8f0;
+      --dark: #1e2b1e;
+      --white: #ffffff;
+      --black: #000000;
+      --shadow: 0 20px 40px rgba(0,0,0,0.2);
+      --orange: #FFA500;
+      --orange-light: #FFF3E0;
+    }
+    body {
+      background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+      position: relative;
+    }
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      background: rgba(76,175,80,0.15);
+      animation: float 12s infinite ease-in-out;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .blob:nth-child(1) { width: 300px; height: 300px; top: -100px; left: -100px; }
+    .blob:nth-child(2) { width: 400px; height: 400px; bottom: -150px; right: -150px; animation-delay: 3s; }
+    .blob:nth-child(3) { width: 200px; height: 200px; top: 40%; left: 70%; animation-delay: 6s; }
+    @keyframes float {
+      0%,100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-40px) rotate(180deg); }
+    }
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 95%;
+      max-width: 1200px;
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(20px);
+      border-radius: 30px;
+      padding: 30px;
+      box-shadow: var(--shadow);
+      margin: 30px 0;
+      border: 1px solid rgba(255,255,255,0.5);
+      transition: all 0.3s;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--dark);
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+    .logo span { color: var(--primary); }
+    .nav-buttons button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin-left: 10px;
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.3s;
+      box-shadow: 0 4px 15px rgba(76,175,80,0.4);
+    }
+    .nav-buttons button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(76,175,80,0.6);
+    }
+    .nav-buttons .logout-btn { background: #f44336; box-shadow: 0 4px 15px rgba(244,67,54,0.4); }
+    .nav-buttons .logout-btn:hover { box-shadow: 0 8px 25px rgba(244,67,54,0.6); }
+    .nav-buttons .admin-btn { background: var(--dark); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+    .nav-buttons .admin-btn:hover { box-shadow: 0 8px 25px rgba(0,0,0,0.5); }
+    .nav-buttons .profile-btn { background: #2196F3; box-shadow: 0 4px 15px rgba(33,150,243,0.4); }
+    .nav-buttons .profile-btn:hover { box-shadow: 0 8px 25px rgba(33,150,243,0.6); }
+
+    /* Auth Styles */
+    .auth-tabs { display: flex; gap: 10px; margin-bottom: 25px; }
+    .auth-tabs button {
+      flex: 1;
+      padding: 12px;
+      background: var(--light);
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .auth-tabs button.active { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(76,175,80,0.4); }
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    .auth-form input {
+      padding: 14px 20px;
+      border: 2px solid #ddd;
+      border-radius: 12px;
+      font-size: 1rem;
+      transition: 0.3s;
+      background: white;
+    }
+    .auth-form input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(76,175,80,0.2);
+      outline: none;
+    }
+    .auth-form button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: 0.3s;
+      box-shadow: 0 4px 15px rgba(76,175,80,0.4);
+    }
+    .auth-form button:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(76,175,80,0.6); }
+
+    /* Dashboard Styles */
+    .balance-card {
+      background: linear-gradient(135deg, var(--primary), #388E3C);
+      color: white;
+      padding: 25px;
+      border-radius: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 15px 35px rgba(76,175,80,0.5);
+      transform: perspective(1000px) rotateX(0deg);
+      transition: 0.5s;
+      position: relative;
+    }
+    .balance-card:hover { transform: perspective(1000px) rotateX(5deg); }
+    .balance-amount { font-size: 2.5rem; font-weight: 800; }
+    .withdraw-btn {
+      position: absolute;
+      right: 20px;
+      bottom: 20px;
+      background: var(--orange);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: 0.3s;
+      box-shadow: 0 4px 15px rgba(255,165,0,0.4);
+    }
+    .withdraw-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(255,165,0,0.6); }
+
+    /* 3D Active Investment Box */
+    .active-investment-3d {
+      background: linear-gradient(145deg, #2e7d32, #1b5e20);
+      color: white;
+      padding: 25px;
+      border-radius: 25px;
+      margin-bottom: 30px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+      transform: perspective(1000px) rotateX(2deg) rotateY(2deg);
+      transition: 0.5s;
+      position: relative;
+      overflow: hidden;
+    }
+    .active-investment-3d::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+      animation: rotate 10s linear infinite;
+    }
+    .active-investment-3d:hover {
+      transform: perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1.02);
+      box-shadow: 0 35px 70px rgba(0,0,0,0.6);
+    }
+    .active-investment-3d .details-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+      position: relative;
+      z-index: 1;
+    }
+    .active-investment-3d .detail-item {
+      background: rgba(255,255,255,0.1);
+      padding: 15px;
+      border-radius: 15px;
+      text-align: center;
+    }
+    .active-investment-3d .detail-item .label {
+      font-size: 0.8rem;
+      opacity: 0.8;
+    }
+    .active-investment-3d .detail-item .value {
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+    .countdown-timer {
+      font-size: 2rem;
+      font-weight: 800;
+      text-align: center;
+      margin: 15px 0;
+      color: #FFD700;
+      text-shadow: 0 0 20px rgba(255,215,0,0.8);
+      position: relative;
+      z-index: 1;
+    }
+    @keyframes rotate { 100% { transform: rotate(360deg); } }
+
+    /* Package Grid */
+    .package-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 25px;
+      margin: 30px 0;
+    }
+    .package-card {
+      background: white;
+      border-radius: 20px;
+      padding: 25px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      transition: 0.4s;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transform-style: preserve-3d;
+    }
+    .package-card:hover {
+      transform: translateY(-15px) scale(1.03);
+      box-shadow: 0 25px 50px rgba(76,175,80,0.4);
+    }
+    .package-card .amount {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--dark);
+    }
+    .package-card .daily {
+      background: var(--light);
+      padding: 8px 15px;
+      border-radius: 20px;
+      display: inline-block;
+      margin: 10px 0;
+      font-weight: 600;
+    }
+    .package-card .duration {
+      color: #777;
+      font-size: 0.9rem;
+    }
+    .package-card .deposit-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: 700;
+      margin-top: 15px;
+      transition: 0.3s;
+      box-shadow: 0 4px 15px rgba(76,175,80,0.4);
+      position: relative;
+      z-index: 1;
+    }
+    .package-card .deposit-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(76,175,80,0.6); }
+    .package-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(76,175,80,0.1) 0%, transparent 60%);
+      animation: rotate 8s linear infinite;
+    }
+
+    /* History Section */
+    .history-tabs {
+      display: flex;
+      gap: 10px;
+      margin: 30px 0 15px;
+      flex-wrap: wrap;
+    }
+    .history-tabs button {
+      padding: 10px 20px;
+      background: var(--light);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+    .history-tabs button.active { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(76,175,80,0.4); }
+    .history-content {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .history-item:last-child { border-bottom: none; }
+    .badge {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .badge.active { background: #e8f5e9; color: #388E3C; }
+    .badge.completed { background: #f5f5f5; color: #777; }
+    .badge.pending { background: #fff3e0; color: #E65100; }
+    .badge.approved { background: #e8f5e9; color: #388E3C; }
+    .badge.rejected { background: #ffebee; color: #c62828; }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn 0.3s;
+    }
+    .modal {
+      background: white;
+      border-radius: 25px;
+      padding: 30px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+      animation: slideUp 0.4s;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal h3 { margin-bottom: 20px; color: var(--dark); }
+    .modal .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .modal input, .modal select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      margin: 10px 0;
+      font-size: 1rem;
+    }
+    .modal button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 14px 25px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      transition: 0.3s;
+    }
+    .modal button:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(76,175,80,0.6); }
+
+    /* Withdrawal Modal Specific */
+    .withdrawal-details-summary {
+      background: var(--light);
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+    .withdrawal-details-summary p {
+      margin: 5px 0;
+    }
+    .edit-details-btn {
+      background: #2196F3;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-top: 10px;
+      transition: 0.3s;
+    }
+    .edit-details-btn:hover { background: #1976D2; }
+
+    /* Profile Modal */
+    .profile-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin: 0 auto 15px;
+      display: block;
+      background: #f0f0f0;
+      border: 3px solid var(--primary);
+    }
+    .profile-field {
+      margin-bottom: 15px;
+    }
+    .profile-field label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .hidden { display: none !important; }
+    @media (max-width: 768px) {
+      .container { padding: 15px; }
+      .logo { font-size: 1.4rem; }
+      .balance-card { padding: 15px; }
+      .withdraw-btn { position: static; margin-top: 15px; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="blob"></div>
+  <div class="blob"></div>
+  <div class="blob"></div>
+
+  <div class="container" id="mainContainer">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">Engro <span>Private Solution</span></div>
+      <div class="nav-buttons">
+        <button class="profile-btn hidden" id="profileBtn" onclick="openProfileModal()">👤 Profile</button>
+        <button class="admin-btn" id="adminLoginBtn" onclick="openAdminLoginModal()">Admin</button>
+        <button class="logout-btn hidden" id="logoutBtn" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <!-- Auth Section -->
+    <div id="authSection">
+      <div class="auth-tabs">
+        <button id="signupTab" class="active" onclick="toggleAuth('signup')">Sign Up</button>
+        <button id="loginTab" onclick="toggleAuth('login')">Login</button>
+      </div>
+      <div class="auth-form" id="signupForm">
+        <input type="email" id="signupEmail" placeholder="Email address">
+        <input type="password" id="signupPassword" placeholder="Password">
+        <button onclick="signupUser()">Create Account</button>
+      </div>
+      <div class="auth-form hidden" id="loginForm">
+        <input type="email" id="loginEmail" placeholder="Email address">
+        <input type="password" id="loginPassword" placeholder="Password">
+        <button onclick="loginUser()">Login</button>
+      </div>
+    </div>
+
+    <!-- User Dashboard -->
+    <div id="dashboardSection" class="hidden">
+      <div class="balance-card">
+        <div>Available Balance</div>
+        <div class="balance-amount">PKR <span id="balanceDisplay">0</span></div>
+        <button class="withdraw-btn" onclick="openWithdrawalModal()">💰 Withdraw Funds</button>
+      </div>
+
+      <!-- Active Investment 3D Box -->
+      <div id="activeInvestmentBox" class="active-investment-3d hidden">
+        <h3>📦 Active Investment</h3>
+        <div class="details-grid" id="activeInvestmentDetails"></div>
+        <div class="countdown-timer" id="countdownTimer">--:--:--</div>
+        <div style="text-align:center; position:relative; z-index:1;">Next Earnings In:</div>
+      </div>
+
+      <h3 style="margin-bottom:15px; color:var(--dark);">Choose Investment Package</h3>
+      <div class="package-grid" id="packageGrid"></div>
+
+      <!-- User History Section -->
+      <div class="history-tabs">
+        <button class="active" onclick="switchHistoryTab('activePlans')">Active Plans</button>
+        <button onclick="switchHistoryTab('deposits')">Deposits</button>
+        <button onclick="switchHistoryTab('withdrawals')">Withdrawals</button>
+      </div>
+      <div class="history-content" id="historyContent">Loading...</div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="adminDashboardSection" class="hidden">
+      <h2 style="margin-bottom:20px; color:var(--dark);">Admin Panel</h2>
+      <div class="admin-tabs">
+        <button class="active" onclick="switchAdminTab('pending')">Pending Deposits</button>
+        <button onclick="switchAdminTab('all')">All Deposits</button>
+        <button onclick="switchAdminTab('withdrawals')">Withdrawals</button>
+        <button onclick="switchAdminTab('users')">Users</button>
+        <button onclick="switchAdminTab('investments')">Investments</button>
+      </div>
+      <div class="admin-content" id="adminContent">Loading...</div>
+    </div>
+  </div>
+
+  <!-- Deposit Modal -->
+  <div id="depositModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3>Deposit Details</h3>
+      <div id="depositDetails"></div>
+      <input type="text" id="tidInput" placeholder="Enter TID / Transaction ID">
+      <button onclick="submitDeposit()">Submit Deposit Request</button>
+      <button style="margin-top:10px; background:#777;" onclick="closeDepositModal()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Withdrawal Modal -->
+  <div id="withdrawalModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3>Withdraw Funds</h3>
+      <div id="withdrawalContent"></div>
+    </div>
+  </div>
+
+  <!-- Admin Login Modal -->
+  <div id="adminLoginModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3>Admin Login</h3>
+      <input type="email" id="adminEmail" placeholder="Admin Email">
+      <input type="password" id="adminPassword" placeholder="Admin Password">
+      <button onclick="adminLogin()">Login as Admin</button>
+      <button style="margin-top:10px; background:#777;" onclick="closeAdminLoginModal()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Profile Modal -->
+  <div id="profileModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3>My Profile</h3>
+      <img id="profileAvatar" class="profile-avatar" src="https://via.placeholder.com/100" alt="Profile Picture">
+      <div class="profile-field">
+        <label>Email (read-only)</label>
+        <input type="email" id="profileEmail" disabled>
+      </div>
+      <div class="profile-field">
+        <label>Full Name</label>
+        <input type="text" id="profileName" placeholder="Enter your name">
+      </div>
+      <div class="profile-field">
+        <label>Upload Profile Picture</label>
+        <input type="file" id="profileImageInput" accept="image/*">
+      </div>
+      <button onclick="saveProfile()">Save Profile</button>
+      <button style="margin-top:10px; background:#777;" onclick="closeProfileModal()">Cancel</button>
+    </div>
+  </div>
+
+  <script>
+    // Firebase Config (provided)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBUUvgeDFSWUYZEg7QdmXRMGSe8okAEXrc",
+      authDomain: "halal-pk.firebaseapp.com",
+      projectId: "halal-pk",
+      storageBucket: "halal-pk.firebasestorage.app",
+      messagingSenderId: "806259174926",
+      appId: "1:806259174926:web:79147c363c041cdf16d65f"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+
+    const ADMIN_EMAIL = 'admin@engro.com';
+    const PHONE_NUMBER = '03082836422'; // JazzCash number
+
+    let currentUser = null;
+    let isAdmin = false;
+    let selectedPackage = null;
+    let adminTab = 'pending';
+    let adminUnsubscribe = null;
+    let activeInvestmentListener = null;
+    let historyTab = 'activePlans';
+    let historyUnsubscribe = null;
+
+    const packages = [
+      { id: 'starter', name: 'Starter', amount: 300, dailyReturn: 75, durationDays: 30, totalReturn: 2250, color: '#4CAF50' },
+      { id: 'silver', name: 'Silver', amount: 800, dailyReturn: 250, durationDays: 30, totalReturn: 7500, color: '#9E9E9E' },
+      { id: 'gold', name: 'Gold', amount: 1400, dailyReturn: 440, durationDays: 30, totalReturn: 13200, color: '#FFD700' },
+      { id: 'diamond', name: 'Diamond', amount: 2500, dailyReturn: 880, durationDays: 30, totalReturn: 26400, color: '#B9F2FF' }
+    ];
+
+    // Auth State Listener
+    auth.onAuthStateChanged(async (user) => {
+      currentUser = user;
+      if (user) {
+        if (user.email === ADMIN_EMAIL) {
+          isAdmin = true;
+          showAdminDashboard();
+        } else {
+          isAdmin = false;
+          showUserDashboard(user);
+        }
+      } else {
+        currentUser = null;
+        isAdmin = false;
+        showAuthSection();
+      }
+    });
+
+    function showAuthSection() {
+      document.getElementById('authSection').classList.remove('hidden');
+      document.getElementById('dashboardSection').classList.add('hidden');
+      document.getElementById('adminDashboardSection').classList.add('hidden');
+      document.getElementById('logoutBtn').classList.add('hidden');
+      document.getElementById('adminLoginBtn').classList.remove('hidden');
+      document.getElementById('profileBtn').classList.add('hidden');
+      if (activeInvestmentListener) { activeInvestmentListener(); activeInvestmentListener = null; }
+      if (historyUnsubscribe) { historyUnsubscribe(); historyUnsubscribe = null; }
+    }
+
+    function showUserDashboard(user) {
+      document.getElementById('authSection').classList.add('hidden');
+      document.getElementById('dashboardSection').classList.remove('hidden');
+      document.getElementById('adminDashboardSection').classList.add('hidden');
+      document.getElementById('logoutBtn').classList.remove('hidden');
+      document.getElementById('adminLoginBtn').classList.remove('hidden');
+      document.getElementById('profileBtn').classList.remove('hidden');
+      renderPackages();
+      initUserDashboard(user);
+    }
+
+    function showAdminDashboard() {
+      document.getElementById('authSection').classList.add('hidden');
+      document.getElementById('dashboardSection').classList.add('hidden');
+      document.getElementById('adminDashboardSection').classList.remove('hidden');
+      document.getElementById('logoutBtn').classList.remove('hidden');
+      document.getElementById('adminLoginBtn').classList.add('hidden');
+      document.getElementById('profileBtn').classList.add('hidden');
+      initAdminDashboard();
+    }
+
+    function toggleAuth(type) {
+      const signupForm = document.getElementById('signupForm');
+      const loginForm = document.getElementById('loginForm');
+      const signupTab = document.getElementById('signupTab');
+      const loginTab = document.getElementById('loginTab');
+      if (type === 'signup') {
+        signupForm.classList.remove('hidden');
+        loginForm.classList.add('hidden');
+        signupTab.classList.add('active');
+        loginTab.classList.remove('active');
+      } else {
+        signupForm.classList.add('hidden');
+        loginForm.classList.remove('hidden');
+        signupTab.classList.remove('active');
+        loginTab.classList.add('active');
+      }
+    }
+
+    async function signupUser() {
+      const email = document.getElementById('signupEmail').value.trim();
+      const password = document.getElementById('signupPassword').value;
+      if (!email || !password) return alert('Please fill all fields');
+      try {
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+        await db.collection('users').doc(user.uid).set({
+          email: user.email,
+          balance: 0,
+          name: '',
+          photoURL: '',
+          accountHolderName: '',
+          accountType: '',
+          accountNumber: '',
+          cnic: '',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        alert('Signup successful!');
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    async function loginUser() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      try {
+        await auth.signInWithEmailAndPassword(email, password);
+        alert('Login successful!');
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    function logout() {
+      if (adminUnsubscribe) { adminUnsubscribe(); adminUnsubscribe = null; }
+      if (activeInvestmentListener) { activeInvestmentListener(); activeInvestmentListener = null; }
+      if (historyUnsubscribe) { historyUnsubscribe(); historyUnsubscribe = null; }
+      auth.signOut();
+    }
+
+    // Profile Functions
+    function openProfileModal() {
+      if (!currentUser) return;
+      const modal = document.getElementById('profileModal');
+      modal.classList.remove('hidden');
+      db.collection('users').doc(currentUser.uid).get().then((doc) => {
+        if (doc.exists) {
+          const data = doc.data();
+          document.getElementById('profileEmail').value = data.email || currentUser.email;
+          document.getElementById('profileName').value = data.name || '';
+          const avatar = document.getElementById('profileAvatar');
+          if (data.photoURL) {
+            avatar.src = data.photoURL;
+          } else {
+            avatar.src = 'https://via.placeholder.com/100';
+          }
+        }
+      });
+    }
+
+    function closeProfileModal() {
+      document.getElementById('profileModal').classList.add('hidden');
+    }
+
+    async function saveProfile() {
+      if (!currentUser) return;
+      const name = document.getElementById('profileName').value.trim();
+      const fileInput = document.getElementById('profileImageInput');
+      const file = fileInput.files[0];
+
+      try {
+        let photoURL = null;
+        if (file) {
+          const storageRef = storage.ref(`profileImages/${currentUser.uid}`);
+          await storageRef.put(file);
+          photoURL = await storageRef.getDownloadURL();
+        }
+
+        const userRef = db.collection('users').doc(currentUser.uid);
+        const updateData = { name: name };
+        if (photoURL) {
+          updateData.photoURL = photoURL;
+        }
+        await userRef.update(updateData);
+        alert('Profile saved successfully!');
+        closeProfileModal();
+      } catch (error) {
+        alert('Error saving profile: ' + error.message);
+      }
+    }
+
+    function renderPackages() {
+      const grid = document.getElementById('packageGrid');
+      grid.innerHTML = packages.map(pkg => `
+        <div class="package-card" style="border-top: 5px solid ${pkg.color};">
+          <div class="amount">PKR ${pkg.amount}</div>
+          <div style="font-weight:700; font-size:1.2rem; margin-bottom:10px;">${pkg.name}</div>
+          <div class="daily">Daily Earnings: PKR ${pkg.dailyReturn}</div>
+          <div class="duration">Duration: ${pkg.durationDays} Days</div>
+          <div class="duration">Total Return: PKR ${pkg.totalReturn}</div>
+          <button class="deposit-btn" onclick="openDepositModal('${pkg.id}')">Deposit</button>
+        </div>
+      `).join('');
+    }
+
+    async function initUserDashboard(user) {
+      db.collection('users').doc(user.uid).onSnapshot((doc) => {
+        if (doc.exists) {
+          const balance = doc.data().balance || 0;
+          document.getElementById('balanceDisplay').innerText = Math.floor(balance);
+        }
+      });
+
+      await processInvestments(user);
+      loadInvestments(user);
+      setupActiveInvestment(user);
+      setupHistory(user);
+    }
+
+    async function processInvestments(user) {
+      const userRef = db.collection('users').doc(user.uid);
+      const invSnapshot = await db.collection('investments')
+        .where('userId', '==', user.uid)
+        .where('active', '==', true)
+        .get();
+
+      if (invSnapshot.empty) return;
+
+      const batch = db.batch();
+      let totalToAdd = 0;
+
+      invSnapshot.docs.forEach((doc) => {
+        const inv = doc.data();
+        if (!inv.startDate) return;
+        const startMillis = inv.startDate.toMillis();
+        const now = Date.now();
+        let days = Math.floor((now - startMillis) / (1000 * 60 * 60 * 24));
+        if (days < 0) days = 0;
+        if (days > inv.durationDays) days = inv.durationDays;
+
+        const earned = days * inv.dailyReturn;
+        const oldPaid = inv.paidAmount || 0;
+
+        if (earned > oldPaid) {
+          totalToAdd += earned - oldPaid;
+          batch.update(doc.ref, { paidAmount: earned });
+        }
+        if (days >= inv.durationDays) {
+          batch.update(doc.ref, { active: false });
+        }
+      });
+
+      if (totalToAdd > 0) {
+        batch.update(userRef, { balance: firebase.firestore.FieldValue.increment(totalToAdd) });
+      }
+      await batch.commit();
+    }
+
+    function setupActiveInvestment(user) {
+      if (activeInvestmentListener) { activeInvestmentListener(); activeInvestmentListener = null; }
+      activeInvestmentListener = db.collection('investments')
+        .where('userId', '==', user.uid)
+        .where('active', '==', true)
+        .orderBy('startDate', 'desc')
+        .limit(1)
+        .onSnapshot(async (snapshot) => {
+          const box = document.getElementById('activeInvestmentBox');
+          if (snapshot.empty) {
+            box.classList.add('hidden');
+            return;
+          }
+          const doc = snapshot.docs[0];
+          const inv = doc.data();
+          box.classList.remove('hidden');
+
+          const detailsHtml = `
+            <div class="detail-item">
+              <div class="label">Package</div>
+              <div class="value">${inv.packageName}</div>
+            </div>
+            <div class="detail-item">
+              <div class="label">Invested</div>
+              <div class="value">PKR ${inv.amount}</div>
+            </div>
+            <div class="detail-item">
+              <div class="label">Daily Earnings</div>
+              <div class="value">PKR ${inv.dailyReturn}</div>
+            </div>
+            <div class="detail-item">
+              <div class="label">Days Elapsed</div>
+              <div class="value" id="daysElapsed">0/${inv.durationDays}</div>
+            </div>
+            <div class="detail-item">
+              <div class="label">Earned So Far</div>
+              <div class="value" id="earnedSoFar">PKR ${inv.paidAmount || 0}</div>
+            </div>
+            <div class="detail-item">
+              <div class="label">Total Expected</div>
+              <div class="value">PKR ${inv.amount + (inv.dailyReturn * inv.durationDays)}</div>
+            </div>
+          `;
+          document.getElementById('activeInvestmentDetails').innerHTML = detailsHtml;
+          startCountdown(inv);
+        });
+    }
+
+    function startCountdown(inv) {
+      const startMillis = inv.startDate ? inv.startDate.toMillis() : Date.now();
+      const paidAmount = inv.paidAmount || 0;
+      const dailyReturn = inv.dailyReturn || 0;
+      const paidDays = dailyReturn > 0 ? Math.floor(paidAmount / dailyReturn) : 0;
+      const nextPayoutMillis = startMillis + (paidDays + 1) * 24 * 60 * 60 * 1000;
+
+      if (window.countdownInterval) clearInterval(window.countdownInterval);
+
+      function updateTimer() {
+        const now = Date.now();
+        let diff = nextPayoutMillis - now;
+        if (diff < 0) diff = 0;
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        document.getElementById('countdownTimer').innerText =
+          `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        if (diff === 0) {
+          processInvestments(currentUser).then(() => {});
+        }
+      }
+
+      updateTimer();
+      window.countdownInterval = setInterval(updateTimer, 1000);
+    }
+
+    function loadInvestments(user) {
+      db.collection('investments')
+        .where('userId', '==', user.uid)
+        .orderBy('startDate', 'desc')
+        .onSnapshot((snapshot) => {
+          const list = document.getElementById('investmentsList');
+          if (snapshot.empty) {
+            list.innerHTML = '<p>No investments yet. Choose a package above.</p>';
+            return;
+          }
+          let html = '';
+          snapshot.docs.forEach((doc) => {
+            const inv = doc.data();
+            const startMillis = inv.startDate ? inv.startDate.toMillis() : Date.now();
+            const now = Date.now();
+            let days = Math.floor((now - startMillis) / (1000 * 60 * 60 * 24));
+            if (days < 0) days = 0;
+            if (days > inv.durationDays) days = inv.durationDays;
+            const earned = days * inv.dailyReturn;
+            const status = inv.active ? 'active' : 'completed';
+            html += `
+              <div class="investment-item">
+                <div>
+                  <strong>${inv.packageName}</strong> (PKR ${inv.amount})<br>
+                  <small>Daily: PKR ${inv.dailyReturn} | Elapsed: ${days}/${inv.durationDays} days</small>
+                </div>
+                <div style="text-align:right;">
+                  <span class="badge ${status}">${status.toUpperCase()}</span><br>
+                  <small>Earned: PKR ${earned}</small>
+                </div>
+              </div>
+            `;
+          });
+          list.innerHTML = html;
+        });
+    }
+
+    // History Section
+    function setupHistory(user) {
+      if (historyUnsubscribe) { historyUnsubscribe(); historyUnsubscribe = null; }
+      const historyContent = document.getElementById('historyContent');
+      historyContent.innerHTML = 'Loading...';
+      const userId = user.uid;
+
+      let activePlansUnsub = db.collection('investments')
+        .where('userId', '==', userId)
+        .where('active', '==', true)
+        .orderBy('startDate', 'desc')
+        .onSnapshot(() => {
+          if (historyTab === 'activePlans') renderHistory(userId);
+        });
+
+      let depositsUnsub = db.collection('deposits')
+        .where('userId', '==', userId)
+        .orderBy('createdAt', 'desc')
+        .onSnapshot(() => {
+          if (historyTab === 'deposits') renderHistory(userId);
+        });
+
+      let withdrawalsUnsub = db.collection('withdrawals')
+        .where('userId', '==', userId)
+        .orderBy('createdAt', 'desc')
+        .onSnapshot(() => {
+          if (historyTab === 'withdrawals') renderHistory(userId);
+        });
+
+      historyUnsubscribe = () => {
+        if (activePlansUnsub) activePlansUnsub();
+        if (depositsUnsub) depositsUnsub();
+        if (withdrawalsUnsub) withdrawalsUnsub();
+      };
+    }
+
+    function switchHistoryTab(tab) {
+      historyTab = tab;
+      document.querySelectorAll('.history-tabs button').forEach((btn) => {
+        btn.classList.remove('active');
+      });
+      if (tab === 'activePlans') document.querySelector('.history-tabs button:nth-child(1)').classList.add('active');
+      else if (tab === 'deposits') document.querySelector('.history-tabs button:nth-child(2)').classList.add('active');
+      else if (tab === 'withdrawals') document.querySelector('.history-tabs button:nth-child(3)').classList.add('active');
+      renderHistory(currentUser.uid);
+    }
+
+    async function renderHistory(userId) {
+      const container = document.getElementById('historyContent');
+      if (!container) return;
+      container.innerHTML = 'Loading...';
+
+      if (historyTab === 'activePlans') {
+        const snapshot = await db.collection('investments')
+          .where('userId', '==', userId)
+          .where('active', '==', true)
+          .orderBy('startDate', 'desc')
+          .get();
+        if (snapshot.empty) {
+          container.innerHTML = '<p>No active plans.</p>';
+          return;
+        }
+        let html = '';
+        snapshot.docs.forEach(doc => {
+          const inv = doc.data();
+          const startMillis = inv.startDate ? inv.startDate.toMillis() : Date.now();
+          const now = Date.now();
+          let days = Math.floor((now - startMillis) / (1000 * 60 * 60 * 24));
+          if (days < 0) days = 0;
+          if (days > inv.durationDays) days = inv.durationDays;
+          html += `
+            <div class="history-item">
+              <div>
+                <strong>${inv.packageName}</strong><br>
+                <small>PKR ${inv.amount} | Daily: PKR ${inv.dailyReturn} | Elapsed: ${days}/${inv.durationDays} days</small>
+              </div>
+              <span class="badge active">ACTIVE</span>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      } else if (historyTab === 'deposits') {
+        const snapshot = await db.collection('deposits')
+          .where('userId', '==', userId)
+          .orderBy('createdAt', 'desc')
+          .get();
+        if (snapshot.empty) {
+          container.innerHTML = '<p>No deposits.</p>';
+          return;
+        }
+        let html = '';
+        snapshot.docs.forEach(doc => {
+          const dep = doc.data();
+          const statusClass = dep.status === 'approved' ? 'approved' : dep.status === 'rejected' ? 'rejected' : 'pending';
+          html += `
+            <div class="history-item">
+              <div>
+                <strong>${dep.packageName}</strong><br>
+                <small>PKR ${dep.amount} | TID: ${dep.tid}</small>
+              </div>
+              <span class="badge ${statusClass}">${dep.status.toUpperCase()}</span>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      } else if (historyTab === 'withdrawals') {
+        const snapshot = await db.collection('withdrawals')
+          .where('userId', '==', userId)
+          .orderBy('createdAt', 'desc')
+          .get();
+        if (snapshot.empty) {
+          container.innerHTML = '<p>No withdrawals.</p>';
+          return;
+        }
+        let html = '';
+        snapshot.docs.forEach(doc => {
+          const wd = doc.data();
+          const statusClass = wd.status === 'approved' ? 'approved' : wd.status === 'rejected' ? 'rejected' : 'pending';
+          html += `
+            <div class="history-item">
+              <div>
+                <strong>PKR ${wd.amount}</strong><br>
+                <small>${wd.accountType} - ${wd.accountNumber} | ${wd.accountHolderName}</small>
+              </div>
+              <span class="badge ${statusClass}">${wd.status.toUpperCase()}</span>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      }
+    }
+
+    // Withdrawal Modal Functions
+    function openWithdrawalModal() {
+      if (!currentUser) return;
+      const modal = document.getElementById('withdrawalModal');
+      const content = document.getElementById('withdrawalContent');
+      modal.classList.remove('hidden');
+
+      db.collection('users').doc(currentUser.uid).get().then((doc) => {
+        if (!doc.exists) return;
+        const data = doc.data();
+        const hasAccount = data.accountHolderName && data.accountType && data.accountNumber && data.cnic;
+
+        if (hasAccount) {
+          // Show amount entry + saved details
+          content.innerHTML = `
+            <div class="withdrawal-details-summary">
+              <p><strong>Account Holder:</strong> ${data.accountHolderName}</p>
+              <p><strong>Account Type:</strong> ${data.accountType}</p>
+              <p><strong>Account Number:</strong> ${data.accountNumber}</p>
+              <p><strong>CNIC:</strong> ${data.cnic}</p>
+              <button class="edit-details-btn" onclick="showEditAccountForm()">Edit Details</button>
+            </div>
+            <input type="number" id="withdrawAmountInput" placeholder="Amount (PKR)" min="1">
+            <button onclick="submitWithdrawal()">Proceed Withdrawal</button>
+            <button style="margin-top:10px; background:#777;" onclick="closeWithdrawalModal()">Cancel</button>
+          `;
+        } else {
+          // Show account details form
+          content.innerHTML = `
+            <p>Please save your account details first.</p>
+            <input type="text" id="wdHolderName" placeholder="Account Holder Name">
+            <select id="wdAccountType">
+              <option value="Easypaisa">Easypaisa</option>
+              <option value="JazzCash">JazzCash</option>
+            </select>
+            <input type="text" id="wdAccountNumber" placeholder="Account Number">
+            <input type="text" id="wdCnic" placeholder="CNIC No (e.g., 12345-1234567-1)">
+            <button onclick="saveAccountDetails()">Save Account Details</button>
+            <button style="margin-top:10px; background:#777;" onclick="closeWithdrawalModal()">Cancel</button>
+          `;
+        }
+      });
+    }
+
+    function closeWithdrawalModal() {
+      document.getElementById('withdrawalModal').classList.add('hidden');
+    }
+
+    function showEditAccountForm() {
+      const content = document.getElementById('withdrawalContent');
+      db.collection('users').doc(currentUser.uid).get().then((doc) => {
+        if (!doc.exists) return;
+        const data = doc.data();
+        content.innerHTML = `
+          <input type="text" id="wdHolderName" placeholder="Account Holder Name" value="${data.accountHolderName || ''}">
+          <select id="wdAccountType">
+            <option value="Easypaisa" ${data.accountType === 'Easypaisa' ? 'selected' : ''}>Easypaisa</option>
+            <option value="JazzCash" ${data.accountType === 'JazzCash' ? 'selected' : ''}>JazzCash</option>
+          </select>
+          <input type="text" id="wdAccountNumber" placeholder="Account Number" value="${data.accountNumber || ''}">
+          <input type="text" id="wdCnic" placeholder="CNIC No" value="${data.cnic || ''}">
+          <button onclick="saveAccountDetails()">Save Account Details</button>
+          <button style="margin-top:10px; background:#777;" onclick="openWithdrawalModal()">Back</button>
+        `;
+      });
+    }
+
+    async function saveAccountDetails() {
+      const holderName = document.getElementById('wdHolderName').value.trim();
+      const accountType = document.getElementById('wdAccountType').value;
+      const accountNumber = document.getElementById('wdAccountNumber').value.trim();
+      const cnic = document.getElementById('wdCnic').value.trim();
+
+      if (!holderName || !accountNumber || !cnic) {
+        alert('Please fill all fields');
+        return;
+      }
+
+      try {
+        await db.collection('users').doc(currentUser.uid).update({
+          accountHolderName: holderName,
+          accountType: accountType,
+          accountNumber: accountNumber,
+          cnic: cnic
+        });
+        alert('Account details saved!');
+        openWithdrawalModal();
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    async function submitWithdrawal() {
+      const amount = parseFloat(document.getElementById('withdrawAmountInput').value);
+      if (!amount || amount <= 0) {
+        alert('Please enter valid amount');
+        return;
+      }
+
+      try {
+        // Fetch user data for account details
+        const userDoc = await db.collection('users').doc(currentUser.uid).get();
+        const data = userDoc.data();
+        const accountHolderName = data.accountHolderName;
+        const accountType = data.accountType;
+        const accountNumber = data.accountNumber;
+        const cnic = data.cnic;
+
+        if (!accountHolderName || !accountType || !accountNumber || !cnic) {
+          alert('Account details missing. Please save them first.');
+          return;
+        }
+
+        // Transaction to check balance and deduct
+        await db.runTransaction(async (transaction) => {
+          const userRef = db.collection('users').doc(currentUser.uid);
+          const currentUserDoc = await transaction.get(userRef);
+          const balance = currentUserDoc.data().balance || 0;
+          if (amount > balance) {
+            throw new Error('Insufficient balance');
+          }
+          transaction.update(userRef, { balance: firebase.firestore.FieldValue.increment(-amount) });
+          transaction.set(db.collection('withdrawals').doc(), {
+            userId: currentUser.uid,
+            userEmail: currentUser.email,
+            amount: amount,
+            accountHolderName: accountHolderName,
+            accountType: accountType,
+            accountNumber: accountNumber,
+            cnic: cnic,
+            status: 'pending',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        });
+        alert('Withdrawal request submitted. Balance deducted.');
+        closeWithdrawalModal();
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    // Deposit Modal Functions
+    function openDepositModal(packageId) {
+      const pkg = packages.find(p => p.id === packageId);
+      if (!pkg) return;
+      selectedPackage = pkg;
+      const details = document.getElementById('depositDetails');
+      details.innerHTML = `
+        <div class="detail-row"><span>Package:</span><strong>${pkg.name}</strong></div>
+        <div class="detail-row"><span>Investment Amount:</span><strong>PKR ${pkg.amount}</strong></div>
+        <div class="detail-row"><span>Daily Earnings:</span><strong>PKR ${pkg.dailyReturn}</strong></div>
+        <div class="detail-row"><span>Duration:</span><strong>${pkg.durationDays} Days</strong></div>
+        <div class="detail-row"><span>Total Return:</span><strong>PKR ${pkg.totalReturn}</strong></div>
+        <div style="margin-top:15px; padding:10px; background:#f5f5f5; border-radius:10px;">
+          <p>Send payment via JazzCash to this number:</p>
+          <h3 style="color:var(--primary); margin:10px 0;">${PHONE_NUMBER}</h3>
+          <p>After payment, enter TID below and submit.</p>
+        </div>
+      `;
+      document.getElementById('tidInput').value = '';
+      document.getElementById('depositModal').classList.remove('hidden');
+    }
+
+    function closeDepositModal() {
+      document.getElementById('depositModal').classList.add('hidden');
+      selectedPackage = null;
+    }
+
+    async function submitDeposit() {
+      if (!selectedPackage) return;
+      const tid = document.getElementById('tidInput').value.trim();
+      if (!tid) return alert('Please enter TID');
+      if (!currentUser) return alert('Please login first');
+      try {
+        await db.collection('deposits').add({
+          userId: currentUser.uid,
+          userEmail: currentUser.email,
+          packageId: selectedPackage.id,
+          packageName: selectedPackage.name,
+          amount: selectedPackage.amount,
+          dailyReturn: selectedPackage.dailyReturn,
+          durationDays: selectedPackage.durationDays,
+          tid: tid,
+          status: 'pending',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        alert('Deposit request submitted. Wait for admin approval.');
+        closeDepositModal();
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    // Admin Functions (same as before)
+    async function adminLogin() {
+      const email = document.getElementById('adminEmail').value.trim();
+      const password = document.getElementById('adminPassword').value;
+      if (!email || !password) return alert('Please enter credentials');
+      try {
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        if (userCredential.user.email !== ADMIN_EMAIL) {
+          await auth.signOut();
+          alert('Not an admin account');
+          return;
+        }
+        closeAdminLoginModal();
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    function openAdminLoginModal() {
+      document.getElementById('adminLoginModal').classList.remove('hidden');
+    }
+    function closeAdminLoginModal() {
+      document.getElementById('adminLoginModal').classList.add('hidden');
+    }
+
+    function initAdminDashboard() {
+      if (adminUnsubscribe) { adminUnsubscribe(); }
+      adminUnsubscribe = db.collection('deposits').orderBy('createdAt', 'desc').onSnapshot(() => {
+        renderAdminContent();
+      });
+      db.collection('users').onSnapshot(() => {
+        if (adminTab === 'users') renderAdminContent();
+      });
+      db.collection('investments').onSnapshot(() => {
+        if (adminTab === 'investments') renderAdminContent();
+      });
+      db.collection('withdrawals').onSnapshot(() => {
+        if (adminTab === 'withdrawals') renderAdminContent();
+      });
+    }
+
+    function switchAdminTab(tab) {
+      adminTab = tab;
+      document.querySelectorAll('.admin-tabs button').forEach((btn, idx) => {
+        const tabs = ['pending', 'all', 'withdrawals', 'users', 'investments'];
+        if (tabs[idx] === tab) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+      renderAdminContent();
+    }
+
+    async function renderAdminContent() {
+      const container = document.getElementById('adminContent');
+      container.innerHTML = 'Loading...';
+
+      if (adminTab === 'pending' || adminTab === 'all') {
+        const snapshot = await db.collection('deposits').orderBy('createdAt', 'desc').get();
+        const deposits = snapshot.docs.filter(doc => adminTab === 'all' || doc.data().status === 'pending');
+        if (deposits.length === 0) {
+          container.innerHTML = '<p>No deposits found.</p>';
+          return;
+        }
+        let html = '';
+        deposits.forEach((doc) => {
+          const dep = doc.data();
+          const statusColor = dep.status === 'approved' ? 'green' : dep.status === 'rejected' ? 'red' : 'orange';
+          html += `
+            <div class="admin-item">
+              <div>
+                <strong>${dep.userEmail}</strong><br>
+                <small>${dep.packageName} - PKR ${dep.amount} | TID: ${dep.tid}</small><br>
+                <small>Status: <span style="color:${statusColor};">${dep.status}</span></small>
+              </div>
+              <div class="actions">
+                ${dep.status === 'pending' ? `
+                  <button class="approve-btn" onclick="approveDeposit('${doc.id}')">Approve</button>
+                  <button class="reject-btn" onclick="rejectDeposit('${doc.id}')">Reject</button>
+                ` : ''}
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      } else if (adminTab === 'withdrawals') {
+        const snapshot = await db.collection('withdrawals').orderBy('createdAt', 'desc').get();
+        if (snapshot.empty) {
+          container.innerHTML = '<p>No withdrawal requests.</p>';
+          return;
+        }
+        let html = '';
+        snapshot.docs.forEach((doc) => {
+          const wd = doc.data();
+          const statusColor = wd.status === 'approved' ? 'green' : wd.status === 'rejected' ? 'red' : 'orange';
+          html += `
+            <div class="admin-item">
+              <div>
+                <strong>${wd.userEmail}</strong><br>
+                <small>PKR ${wd.amount} | ${wd.accountType} | ${wd.accountNumber}</small><br>
+                <small>Holder: ${wd.accountHolderName} | CNIC: ${wd.cnic}</small><br>
+                <small>Status: <span style="color:${statusColor};">${wd.status}</span></small>
+              </div>
+              <div class="actions">
+                ${wd.status === 'pending' ? `
+                  <button class="approve-btn" onclick="approveWithdrawal('${doc.id}')">Approve</button>
+                  <button class="reject-btn" onclick="rejectWithdrawal('${doc.id}')">Reject</button>
+                ` : ''}
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      } else if (adminTab === 'users') {
+        const snapshot = await db.collection('users').get();
+        if (snapshot.empty) {
+          container.innerHTML = '<p>No users found.</p>';
+          return;
+        }
+        let html = '';
+        snapshot.docs.forEach((doc) => {
+          const userData = doc.data();
+          html += `
+            <div class="admin-item">
+              <div>
+                <strong>${userData.email || 'No Email'}</strong><br>
+                <small>Balance: PKR ${Math.floor(userData.balance || 0)}</small>
+              </div>
+              <div>
+                <button class="approve-btn" onclick="viewUserInvestments('${doc.id}')">View Investments</button>
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      } else if (adminTab === 'investments') {
+        const snapshot = await db.collection('investments').orderBy('startDate', 'desc').get();
+        if (snapshot.empty) {
+          container.innerHTML = '<p>No investments found.</p>';
+          return;
+        }
+        let html = '';
+        snapshot.docs.forEach((doc) => {
+          const inv = doc.data();
+          const status = inv.active ? 'Active' : 'Completed';
+          html += `
+            <div class="admin-item">
+              <div>
+                <strong>${inv.userEmail}</strong><br>
+                <small>${inv.packageName} - PKR ${inv.amount} | Daily: PKR ${inv.dailyReturn}</small><br>
+                <small>Status: ${status} | Earned: PKR ${inv.paidAmount || 0}</small>
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      }
+    }
+
+    async function approveDeposit(depId) {
+      try {
+        await db.runTransaction(async (transaction) => {
+          const depRef = db.collection('deposits').doc(depId);
+          const depDoc = await transaction.get(depRef);
+          if (!depDoc.exists) return;
+          const dep = depDoc.data();
+          if (dep.status !== 'pending') return;
+
+          transaction.update(depRef, {
+            status: 'approved',
+            approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+
+          transaction.set(db.collection('investments').doc(), {
+            userId: dep.userId,
+            userEmail: dep.userEmail,
+            packageId: dep.packageId,
+            packageName: dep.packageName,
+            amount: dep.amount,
+            dailyReturn: dep.dailyReturn,
+            durationDays: dep.durationDays,
+            startDate: firebase.firestore.FieldValue.serverTimestamp(),
+            paidAmount: 0,
+            active: true
+          });
+        });
+        alert('Deposit approved and investment started!');
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    async function rejectDeposit(depId) {
+      try {
+        await db.collection('deposits').doc(depId).update({
+          status: 'rejected'
+        });
+        alert('Deposit rejected.');
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    // Withdrawal approval: do NOT deduct balance again (already deducted on request)
+    async function approveWithdrawal(wdId) {
+      try {
+        await db.collection('withdrawals').doc(wdId).update({
+          status: 'approved',
+          approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        alert('Withdrawal approved.');
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    // Withdrawal rejection: refund amount to user balance
+    async function rejectWithdrawal(wdId) {
+      try {
+        await db.runTransaction(async (transaction) => {
+          const wdRef = db.collection('withdrawals').doc(wdId);
+          const wdDoc = await transaction.get(wdRef);
+          if (!wdDoc.exists) return;
+          const wd = wdDoc.data();
+          if (wd.status !== 'pending') return;
+
+          const userRef = db.collection('users').doc(wd.userId);
+          transaction.update(userRef, { balance: firebase.firestore.FieldValue.increment(wd.amount) });
+          transaction.update(wdRef, { status: 'rejected', rejectedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        });
+        alert('Withdrawal rejected. Amount refunded to user.');
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    async function viewUserInvestments(userId) {
+      const snapshot = await db.collection('investments')
+        .where('userId', '==', userId)
+        .get();
+      if (snapshot.empty) {
+        alert('No investments for this user.');
+        return;
+      }
+      let msg = 'Investments:\n\n';
+      snapshot.docs.forEach(doc => {
+        const inv = doc.data();
+        msg += `${inv.packageName} - PKR ${inv.amount}, Daily: ${inv.dailyReturn}, Status: ${inv.active ? 'Active' : 'Completed'}\n`;
+      });
+      alert(msg);
+    }
+  </script>
+</body>
+</html>
